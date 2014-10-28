@@ -12,24 +12,21 @@
 #
 #   PkgDataBase List Entry available Keys
 #       pkgName = the name of the package
-#       pkgArch = Archtecture the package support (amd64 multiarch arm etc..)
+#       pkgArch = Architecture the package support (amd64 multiarch arm etc..)
 #       pkgVer  = Version number for this package
 #       pkgFile = Mirror File Path / Name to the .deb file
-#       pkgHash = SHA256 hash finger print for the .deb file (consistancy checking)
+#       pkgHash = SHA256 hash finger print for the .deb file (consistency checking)
 #
 ###############################################################################################################
 
 import os
-import errno
 import re
-import urllib.request import urlopen
+from urllib.request import urlopen
 import bz2
 import lzma
-import hashlib
-
 
 class PkgDBPuller:
-    """ when this class is initalized, it needs to know 
+    """ when this class is initialized, it needs to know
         the url to the remote mirror root and
         the path to the local mirror root. """
     def __init__(self, remote_mirror_root_url, local_mirror_root_path):
@@ -37,7 +34,7 @@ class PkgDBPuller:
         self.lmr_path = local_mirror_root_path # local filesystem path for mirror root: ex: /opt/mirror_magic/ubuntu/
         
     """ Fetch and Parse Pkg Database for the vendor/dist/arch/section we want from the local mirror """
-    def fetch_and_parse_local(self, vendor="ubuntu", dist="trusty", arch="amd64", section="main")
+    def fetch_and_parse_local(self, vendor="ubuntu", dist="trusty", arch="amd64", section="main"):
         # Connect to mirror and pull packages.bz2 (ubuntu/default) or packages.xz (debian)
         if (vendor == "debian"):
             url = "file://"+self.lmr_path+"/dists/"+dist+"/"+section+"/binary-"+arch+"/Packages.xz"
@@ -50,26 +47,28 @@ class PkgDBPuller:
 
         # download packages files
         try:
-            reponse = urlopen( url )
+            response = urlopen( url )
+            # read response from filesystem (should be file data)
+            pkgData_Compressed = response.read()
+
         except urllib.error.URLError as e:
             print("(Skip) Error for URL \""+str(url)+"\" : "+str(e.reason) )
             # abort fetch
             return []
+
         except urllib.error.HTTPError as e:
             print("(Skip) HTTP Error for URL \""+str(url)+"\" : error "+str(e.code) )
             # abort fetch
             return []
-        except IOError as e:
-            print("(Skip) File IO Error for URL \n"+str(url)+"\" : error "+str(e)
 
-        # read response from filesystemr (should be file data)
-        pkgData_Compressed = response.read()
+        except IOError as e:
+            print("(Skip) File IO Error for URL \n"+str(url)+"\" : error "+str(e) )
 
         # Decompress the data
-        if ( vendor == "debian" ):
-            pkgData_bytes = lzma.decompress( PkgData_Compressed )
+        if (vendor == "debian"):
+            pkgData_bytes = lzma.decompress( pkgData_Compressed )
         else:
-            pkgData_bytes = bz2.decompress( PkgData_Compressed )
+            pkgData_bytes = bz2.decompress( pkgData_Compressed )
 
         # Decompression leaves us with a array of bytes
         # file data is UTF-8, and we want lines of text to parse
@@ -86,7 +85,7 @@ class PkgDBPuller:
         return self.parsePkgData( pkgData )
 
     """ Fetch and parse Pkg Database for the vendor/dist/arch/section we want from a remote mirror """
-    def fetch_and_parse_remote(self, vendor="ubuntu", dist="trusty", arch="amd64", section="main")
+    def fetch_and_parse_remote(self, vendor="ubuntu", dist="trusty", arch="amd64", section="main"):
         # Connect to mirror and pull packages.bz2 (ubuntu/default) or packages.xz (debian)
         if (vendor == "debian"):
             url = self.rmr_url+"/dists/"+dist+"/"+section+"/binary-"+arch+"/Packages.xz"
@@ -104,6 +103,8 @@ class PkgDBPuller:
         # download packages files
         try:
             reponse = urlopen( url )
+            # read response from webserver (should be file data)
+            pkgData_Compressed = response.read()
         except urllib.error.URLError as e:
             print("(Skip) Error for URL \""+str(url)+"\" : "+str(e.reason) )
             # abort fetch
@@ -112,9 +113,6 @@ class PkgDBPuller:
             print("(Skip) HTTP Error for URL \""+str(url)+"\n : error "+str(e.code) )
             # abort fetch
             return []
-
-        # read response from webserver (should be file data)
-        pkgData_Compressed = response.read()
 
         # Save this data to a file on the local mirror tmp location
         # This will become out new packages file for the local mirror when we are done
@@ -131,9 +129,9 @@ class PkgDBPuller:
 
         # Decompress the data
         if ( vendor == "debian" ):
-            pkgData_bytes = lzma.decompress( PkgData_Compressed )
+            pkgData_bytes = lzma.decompress( pkgData_Compressed )
         else:
-            pkgData_bytes = bz2.decompress( PkgData_Compressed )
+            pkgData_bytes = bz2.decompress( pkgData_Compressed )
 
         # Decompression leaves us with a array of bytes
         # file data is UTF-8, and we want lines of text to parse
@@ -209,7 +207,9 @@ class PkgDBPuller:
     # end parsePkgData
 
         
-        
+if __name__ == "__main__":
+    print("Not designed to be run standalone.. This is a module class definition")
+
         
 
         

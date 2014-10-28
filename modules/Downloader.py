@@ -32,12 +32,12 @@ import time
     called as part of a ThreadPoolExecutor """
 def fetcher(job):
     # update try counter for this job
-    job['trys'] = job['trys']+1
+    job['trys'] += 1
  
-    if ( job_selftest == 1 ):
+    if job_selftest == 1 :
         print("Processing job: "+str(job))
         time.sleep(randint(1,3))
-        if ( randint(0,1) > 0.5):
+        if randint(0,1) > 0.5:
             # simulate a failed dowload
             print("Download: "+job['src']+" -> "+job['dst']+" hash: "+job['hash']+ "   Failed!" )
             job['complete'] = False
@@ -93,7 +93,7 @@ def threaded_downloader( job_list, thread_count ):
     tpe = concurrent.futures.ThreadPoolExecutor(thread_count)
     future_to_job = ( tpe.submit(fetcher, job) for job in job_list )
     for future in concurrent.futures.as_completed(future_to_job):
-        if (future.result()['complete'] == False ):
+        if future.result()['complete'] == False :
             failed_jobs_list.append( future.result() )         
 
     # wait for jobs to finish
