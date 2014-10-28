@@ -15,16 +15,23 @@
 #   'pkgInfoNew':   package info for the new package comming in.  'None' for a remove package action..
 #   'pkgInfoOld':   package info for the old package getting removed. 'None' for a new package action.
 #
+#   pkginfo is a dict with the following keys ( see: PkgDBPuller.py )
+#       pkgName = the name of the package
+#       pkgArch = Architecture the package support (amd64 multi-arch arm etc..)
+#       pkgVer  = Version number for this package
+#       pkgFile = Mirror File Path / Name to the .deb file
+#       pkgHash = SHA256 hash finger print for the .deb file (consistency checking)
+#
 ########################################################################################
 
-class Change_Set_Generator:
+class ChangeSetGenerator:
     """ compute the change set for 2 pkg_lists """
     def __init__(self, pkg_list_new, pkg_list_current ):
         self.pkg_list_new = pkg_list_new      # remote
         self.pkg_list_old = pkg_list_current  # local
         self.change_set = []
         self.pkg_index_new = {}
-        self_pkg_inex_old = {}
+        self.pkg_index_old = {}
 
     """ (INTERNAL) Generate a index hash to
         speed up searches.  The pkg_lists should be 
@@ -49,7 +56,7 @@ class Change_Set_Generator:
         # done generating index for database
         return pkg_index
 
-    """ (INETRNAL) fine the package "pkg_name" in the pkg_list
+    """ (INTERNAL) fine the package "pkg_name" in the pkg_list
         using the pkg_list_index that was generated to speed up
         searches. """
     def find_package_in_list( self, pkg_name, pkg_list, pkg_list_index ):
@@ -136,7 +143,7 @@ class Change_Set_Generator:
                 # means package name we are looking for does not exists in the new list. (was removed)
                 # print("     remove package " + str(old_pkg_entry['pkgName']) )
                 change_set_entry['change'] = "remove"
-                change_set_entry['pkgInfoNew'] = new_pkg_entry
+                change_set_entry['pkgInfoNew'] = None
                 change_set_entry['pkgInfoOld'] = old_pkg_entry
                 self.change_set.append( change_set_entry )
 
@@ -145,4 +152,5 @@ class Change_Set_Generator:
         #end old search
     # end compute_change_set
 
+# end change_set_Generator
 
